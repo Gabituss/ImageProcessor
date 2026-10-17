@@ -12,11 +12,11 @@ int main(int argc, char **argv) {
     try {
         Args args = ParseArgs(argc, argv);
 
-        Image image = bmp::Read(args.input);
-
         for (const auto &filter : args.filters) {
             CheckArguments(filter);
         }
+
+        Image image = bmp::Read(args.input);
 
         std::vector<std::unique_ptr<Filter>> filters;
         for (const auto &filter : args.filters) {

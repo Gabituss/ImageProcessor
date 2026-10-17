@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "args.h"
@@ -15,6 +16,20 @@ public:
     virtual void Apply(Image& image) const = 0;
 
     static void CheckArgs(const FilterSpec&);
+};
+
+class CompositeFilter : public Filter {
+public:
+    CompositeFilter() = default;
+    virtual ~CompositeFilter() = default;
+
+    void Apply(Image &image) const { 
+        for (auto &filter: filters_) {
+            filter->Apply(image);
+        }
+    }
+
+    std::vector<std::unique_ptr<Filter>> filters_;
 };
 
 class PixelFilter : public Filter {
@@ -66,7 +81,7 @@ private:
     std::vector<std::vector<float>> matrix_;
 };
 
-class SharpeningFilter : public Filter {
+class SharpeningFilter : public MatrixFilter {
 public:
     SharpeningFilter();
     explicit SharpeningFilter(const FilterSpec& spec);
@@ -81,31 +96,31 @@ private:
     const MatrixFilter filter_;
 };
 
-class EdgeDetectionFilter : public Filter {
+class ThresholdFilter : public PixelFilter {
+public:
+    explicit ThresholdFilter(float);
+
+    void Transform(Image& image) const override;
+
+    static void CheckArgs(const FilterSpec&);
+private:
+    const float threshold_ = 0;
+};
+
+
+class EdgeDetectionFilter : public CompositeFilter {
 public:
     explicit EdgeDetectionFilter(const FilterSpec& spec);
-    explicit EdgeDetectionFilter(float threshold);
-
-    void Apply(Image& image) const override;
 
     static void CheckArgs(const FilterSpec&);
 
 private:
     static float ParseThreshold(const FilterSpec& spec);
-
-    const float treshold_ = 0;
-    const std::vector<std::vector<float>> matrix_ = {{0, -1, 0}, {-1, 4, -1}, {0, -1, 0}};
-
-    MatrixFilter filter_matrix_;
-    GrayscaleFilter filter_grayscale_;
 };
 
-class GaussianBlurFilter : public Filter {
+class GaussianBlurFilter : public CompositeFilter {
 public:
     explicit GaussianBlurFilter(const FilterSpec& spec);
-    explicit GaussianBlurFilter(float sigma);
-
-    void Apply(Image& image) const override;
 
     static void CheckArgs(const FilterSpec&);
 
@@ -116,9 +131,6 @@ private:
     std::vector<float> Weights(float sigma);
     std::vector<std::vector<float>> Horizontal(float sigma);
     std::vector<std::vector<float>> Vertical(float sigma);
-
-    const MatrixFilter filter_vertical_;
-    const MatrixFilter filter_horizontal_;
 };
 
 class CropFilter : public Filter {
