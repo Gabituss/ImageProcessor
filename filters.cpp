@@ -179,14 +179,14 @@ void ThresholdFilter::Transform(Image &image) const {
 
 EdgeDetectionFilter::EdgeDetectionFilter(const FilterSpec& spec) {
     float threshold = ParseThreshold(spec);
-    filters_.emplace_back(std::make_unique<GrayscaleFilter>());
-    filters_.emplace_back(std::make_unique<MatrixFilter>(
+    AddFilter(std::make_unique<GrayscaleFilter>());
+    AddFilter(std::make_unique<MatrixFilter>(
         std::vector<std::vector<float>>{
             {0.0f, -1.0f, 0.0f},
             {-1.0f, 4.0f, -1.0f},
             {0.0, -1.0f, 0.0f}})
         );
-    filters_.emplace_back(std::make_unique<ThresholdFilter>(threshold));
+    AddFilter(std::make_unique<ThresholdFilter>(threshold));
 }
 
 float EdgeDetectionFilter::ParseThreshold(const FilterSpec& spec) {
@@ -204,8 +204,8 @@ void EdgeDetectionFilter::CheckArgs(const FilterSpec& spec) {
 
 GaussianBlurFilter::GaussianBlurFilter(const FilterSpec& spec) {
     float sigma = ParseSigma(spec);
-    filters_.emplace_back(std::make_unique<MatrixFilter>(Vertical(sigma), false));
-    filters_.emplace_back(std::make_unique<MatrixFilter>(Horizontal(sigma), true));
+    AddFilter(std::make_unique<MatrixFilter>(Vertical(sigma), false));
+    AddFilter(std::make_unique<MatrixFilter>(Horizontal(sigma), true));
 }
 
 float GaussianBlurFilter::ParseSigma(const FilterSpec& spec) {

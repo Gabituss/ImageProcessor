@@ -23,12 +23,17 @@ public:
     CompositeFilter() = default;
     virtual ~CompositeFilter() = default;
 
+    void AddFilter(std::unique_ptr<Filter> filter) {
+        filters_.push_back(std::move(filter));
+    }
+
     void Apply(Image &image) const { 
         for (auto &filter: filters_) {
             filter->Apply(image);
         }
     }
 
+private:
     std::vector<std::unique_ptr<Filter>> filters_;
 };
 
